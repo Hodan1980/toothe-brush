@@ -44,15 +44,48 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
-    // Modal
+    // Modal & Discount Logic
     const modalOverlay = document.getElementById('orderModal');
     const openModalBtns = document.querySelectorAll('.open-order-modal');
     const closeModalBtn = document.querySelector('.close-modal');
     const orderForm = document.getElementById('orderForm');
 
+    // Global variable to store discount from wheel
+    let currentDiscount = 0;
+
     openModalBtns.forEach(btn => {
         btn.addEventListener('click', () => {
             modalOverlay.classList.add('active');
+
+            // Check if we need to inject price info
+            let summary = document.getElementById('order-summary');
+            if (!summary) {
+                summary = document.createElement('div');
+                summary.id = 'order-summary';
+                summary.style.marginBottom = '20px';
+                summary.style.padding = '15px';
+                summary.style.backgroundColor = '#f0faff';
+                summary.style.borderRadius = '8px';
+                summary.style.border = '1px solid #b3e5fc';
+
+                const form = document.getElementById('orderForm');
+                form.parentNode.insertBefore(summary, form);
+            }
+
+            if (currentDiscount > 0) {
+                const originalPrice = 99;
+                const discountAmount = originalPrice * currentDiscount;
+                const finalPrice = originalPrice - discountAmount;
+
+                summary.innerHTML = `
+                    <p style="margin-bottom: 5px; color: #666;">Цена: <span style="text-decoration: line-through;">${originalPrice.toFixed(2)}€</span></p>
+                    <p style="margin-bottom: 5px; color: #e91e63; font-weight: bold;">Отстъпка: -${(currentDiscount * 100).toFixed(0)}% (-${discountAmount.toFixed(2)}€)</p>
+                    <p style="font-size: 1.2rem; font-weight: 800; color: #00ACC1;">Крайна цена: ${finalPrice.toFixed(2)}€</p>
+                `;
+                summary.style.display = 'block';
+            } else {
+                summary.style.display = 'none';
+            }
         });
     });
 
@@ -124,14 +157,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
     /* --- SALES FEATURES LOGIC --- */
 
-    // 1. Countdown Timer (24 hours from now, recurring)
+    // 1. Countdown Timer
     function startCountdown() {
-        // Set end time to midnight tonight or 24h from now. Let's do a fixed 4 hour countdown for urgency.
-        // Or better: End of day.
         const now = new Date();
         const endOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59);
 
-        // If it's close to midnight, add 24 hours
         if (endOfDay.getTime() - now.getTime() < 1000 * 60 * 60) {
             endOfDay.setDate(endOfDay.getDate() + 1);
         }
@@ -144,10 +174,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const currentTime = new Date();
             const diff = endOfDay - currentTime;
 
-            if (diff <= 0) {
-                // Reset or stop
-                return;
-            }
+            if (diff <= 0) return;
 
             const h = Math.floor((diff / (1000 * 60 * 60)) % 24);
             const m = Math.floor((diff / 1000 / 60) % 60);
@@ -163,26 +190,22 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     startCountdown();
 
-    // 2. Live Counter (Random fluctuation)
+    // 2. Live Counter
     function startLiveCounter() {
         const counterEl = document.getElementById('current-viewers');
         let viewers = 24;
 
         setInterval(() => {
-            // Randomly add or subtract 1-3 viewers
-            const change = Math.floor(Math.random() * 5) - 2; // -2 to +2
+            const change = Math.floor(Math.random() * 5) - 2;
             viewers += change;
-
-            // Keep within realistic bounds
             if (viewers < 15) viewers = 15;
             if (viewers > 45) viewers = 45;
-
             counterEl.innerText = viewers;
-        }, 3000); // Update every 3 seconds
+        }, 3000);
     }
     startLiveCounter();
 
-    // 3. Sales Popup (Random simulation)
+    // 3. Sales Popup
     const buyerNames = ['Иван', 'Мария', 'Георги', 'Елена', 'Димитър', 'Петя', 'Николай', 'Силвия', 'Александър', 'Виктория'];
     const cities = ['София', 'Пловдив', 'Варна', 'Бургас', 'Русе', 'Стара Загора', 'Плевен', 'Благоевград'];
     const times = ['1 мин', '2 мин', '5 мин', '10 мин', 'току-що'];
@@ -194,7 +217,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const timeEl = document.getElementById('buyer-time');
 
     function showPopup() {
-        // Randomize content
         const name = buyerNames[Math.floor(Math.random() * buyerNames.length)];
         const city = cities[Math.floor(Math.random() * cities.length)];
         const time = times[Math.floor(Math.random() * times.length)];
@@ -203,25 +225,22 @@ document.addEventListener('DOMContentLoaded', () => {
         cityEl.innerText = city;
         timeEl.innerText = time;
 
-        // Show
         popup.classList.add('active');
 
-        // Hide after 5 seconds
         setTimeout(() => {
             popup.classList.remove('active');
         }, 5000);
 
-        // Schedule next popup (random interval between 10-20 seconds)
         const nextInterval = Math.random() * 10000 + 10000;
         setTimeout(showPopup, nextInterval);
     }
 
-    // Start popup loop after initial delay
     setTimeout(showPopup, 5000);
 
     closePopupBtn.addEventListener('click', () => {
         popup.classList.remove('active');
     });
+
     // 4. Spinning Wheel Logic
     const wheelModal = document.getElementById('wheel-modal');
     const closeWheelBtn = document.querySelector('.close-wheel');
@@ -247,30 +266,18 @@ document.addEventListener('DOMContentLoaded', () => {
         spinBtn.disabled = true;
         spinBtn.innerText = 'Късмет!';
 
-        // Random degree: at least 5 full spins (1800 deg) + random segment
-        // 8 segments = 45deg each.
-        // We want to land on specific percentages randomly.
-        // Let's just pick a random angle.
         const randomDeg = Math.floor(Math.random() * 360) + 1800;
-
         wheel.style.transform = `rotate(${randomDeg}deg)`;
 
-        // Calculate result after animation (5s)
         setTimeout(() => {
-            const actualDeg = randomDeg % 360;
-            // 0 deg is at 3 o'clock usually in CSS rotation if not adjusted, 
-            // but here we rotated segments.
-            // Let's just simulate a result for the user based on the visual.
-            // Actually, let's just give them a good discount!
-
-            // Determine segment based on angle is complex due to CSS setup.
-            // Let's cheat slightly for the text result to ensure satisfaction or randomness.
             const discounts = ['5%', '10%', '15%', '20%', '30%', '45%', '5%', '10%'];
             const result = discounts[Math.floor(Math.random() * discounts.length)];
 
+            // Parse discount
+            currentDiscount = parseInt(result) / 100;
+
             resultDiv.innerHTML = `Честито! Спечели <span style="color: #e91e63; font-size: 2rem;">${result}</span> отстъпка!`;
 
-            // Confetti effect (optional simplifiction)
             spinBtn.innerText = 'Използвай отстъпката';
             spinBtn.disabled = false;
             spinBtn.onclick = () => {
