@@ -1085,3 +1085,43 @@ footer {
         font-size: 2rem;
     }
 }
+/* Fix for Wheel Text Visibility */
+.wheel-segment span {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform-origin: 0 0;
+    transform: rotate(45deg) translate(20px, -50%);
+    /* Adjusted positioning */
+    font-size: 1.1rem;
+    font-weight: 800;
+    color: #ffffff;
+    text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.8);
+    /* Strong shadow for visibility */
+    z-index: 20;
+    white-space: nowrap;
+    pointer-events: none;
+}
+
+/* Ensure the wheel segments are positioned correctly to hold the text */
+.wheel-segment {
+    /* Existing styles are okay, but let's reinforce */
+    display: block;
+    /* Ensure it's not flex centering that hides it */
+    overflow: visible;
+    /* Allow text to spill if needed, though clip-path handles shape */
+}
+
+/* Fix for Why Us alignment if needed (grid-2 is standard, but let's ensure it) */
+.grid-2 {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 40px;
+    align-items: center;
+}
+
+@media (max-width: 768px) {
+    .grid-2 {
+        grid-template-columns: 1fr;
+    }
+}
